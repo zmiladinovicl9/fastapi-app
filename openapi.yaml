@@ -1,0 +1,107 @@
+openapi: 3.0.1
+info:
+  title: StackOverflow Agent API
+  description: API for fetching Stack Overflow questions and saving agent responses to Azure Blob Storage.
+  version: 1.0.0
+
+servers:
+  - url: http://zeljko-fastapi-app.azurewebsites.net
+
+paths:
+  /questions:
+    get:
+      summary: Fetch recent Stack Overflow questions
+      description: >
+        Returns recent Stack Overflow questions filtered by tag, sort order, and time window.
+      parameters:
+        - name: tagged
+          in: query
+          description: Tag to filter questions
+          required: false
+          schema:
+            type: string
+            example: python
+        - name: pagesize
+          in: query
+          description: Number of questions per page
+          required: false
+          schema:
+            type: integer
+            example: 5
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            enum: [creation, votes, activity]
+            example: creation
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            example: desc
+        - name: days
+          in: query
+          description: Number of past days to include
+          required: false
+          schema:
+            type: integer
+            example: 7
+      responses:
+        '200':
+          description: A list of questions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        link:
+                          type: string
+                          format: uri
+                        content:
+                          type: string
+                        date:
+                          type: string
+                          format: date
+                        score:
+                          type: integer
+
+  /save-response:
+    post:
+      summary: Save agent response to blob storage
+      description: >
+        Saves the agent response string as a JSON blob in Azure Blob Storage.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agent_response:
+                  type: string
+                  description: The agent response text to save
+              required:
+                - agent_response
+      responses:
+        '200':
+          description: Confirmation of save
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  blob_name:
+                    type: string
+                    description: Name of the blob created in Azure Blob Storage
