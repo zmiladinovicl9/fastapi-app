@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+stackapi
+azure-storage-blob
+python-dotenv
+gunicorn
