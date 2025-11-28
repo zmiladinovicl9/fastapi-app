@@ -8,6 +8,7 @@ from azure.storage.blob import BlobServiceClient
 from dotenv import load_dotenv
 from datetime import datetime
 import os
+from fastapi.openapi.utils import get_openapi
 
 app = FastAPI()
 
@@ -113,4 +114,23 @@ def save_response(agent_response: str = Body(..., embed=True)):
     }
     """
     blob_name = save_agent_response_to_blob(agent_response)
+
     return {"blob_name": blob_name}
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="StackOverflow Agent API",
+        version="1.0.0",
+        description="API for fetching Stack Overflow questions and saving responses",
+        routes=app.routes,
+    )
+    # Add operationId manually
+    openapi_schema["paths"]["/questions"]["get"]["operationId"] = "fetch_stackoverflow_questions"
+    openapi_schema["paths"]["/save-response"]["post"]["operationId"] = "save_agent_response_to_blob"
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
